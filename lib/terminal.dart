@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:rxdart/rxdart.dart';
 
+import 'parser.dart';
+
 class Home extends StatelessWidget {
   const Home({Key? key}) : super(key: key);
   @override
@@ -37,31 +39,22 @@ class _TerminalState extends State<Terminal> {
           child: Container(
             // constraints: BoxConstraints.tightForFinite(),
             color: Colors.blueGrey,
-            child: StreamBuilder<List<List<int>>>(
+            child: StreamBuilder<List<String>>(
               stream: _channel.stream.transform(
+                /*
                 ScanStreamTransformer<dynamic, List<List<int>>>((acc, curr, i) {
                   acc.add(curr as List<int>);
                   return acc;
-                }, []),
+                }, []),*/
+                TerminalParser(),
               ),
               builder: (context, snapshot) {
-                final List<List<int>>? data = snapshot.data;
+                final List<String>? data = snapshot.data;
                 if (data == null) {
                   return Text("");
                 }
 
-                final str = data.map((data) {
-                  final regexp = RegExp(r'\x1B');
-                  final str = utf8.decode(data).replaceAll(regexp, '^[');
-
-                  RegExp(r'[\x00-\x1F\x7F]').allMatches(str).forEach((m) {
-                    debugPrint("control chars");
-                    debugPrint(m[0]?.codeUnits.toString());
-                  });
-
-                  debugPrint('"' + str + '"');
-                  return str;
-                }).join("\n");
+                final str = data.join("\n");
                 return Text(str);
               },
             ),
